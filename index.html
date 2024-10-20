@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Monitoring System</title>
+    <script>
+        async function saveWeather() {
+            const city = document.getElementById('city').value;
+
+            if (city.trim() === "") {
+                alert("Please enter a city name.");
+                return;
+            }
+
+            const response = await fetch('weather_api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `city=${encodeURIComponent(city)}`,
+            });
+
+            const data = await response.json();
+            alert(data.message || data.error);
+            loadSummaries();  // Refresh the summaries list after saving weather data
+        }
+
+        async function loadSummaries() {
+            const response = await fetch('weather_api.php');
+            const summaries = await response.json();
+            const summariesList = document.getElementById('summariesList');
+            summariesList.innerHTML = '';
+
+            if (summaries.length === 0) {
+                summariesList.innerHTML = '<li>No weather data available.</li>';
+            } else {
+                summaries.forEach(summary => {
+                    const li = document.createElement('li');
+                    let alertMessage = summary.alert_triggered ? ' - ALERT: High temperature!' : '';
+                    li.textContent = `${summary.city} - ${summary.date}: Avg Temp: ${summary.avg_temp}°C, Max Temp: ${summary.max_temp}°C, Min Temp: ${summary.min_temp}°C, Condition: ${summary.dominant_condition}${alertMessage}`;
+                    summariesList.appendChild(li);
+                });
+            }
+        }
+
+        // Load summaries when the page first opens
+        window.onload = loadSummaries;
+    </script>
+</head>
+<body>
+    <h1>Weather Monitoring System</h1>
+    <input type="text" id="city" placeholder="Enter City" />
+    <button onclick="saveWeather()">Fetch Weather</button>
+
+    <h2>Weather Summaries:</h2>
+    <ul id="summariesList"></ul>
+</body>
+</html>
